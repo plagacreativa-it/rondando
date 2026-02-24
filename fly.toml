@@ -1,7 +1,6 @@
 # fly.toml — Fly.io deployment configuration
-# Replace "rodando" with your unique app name (must be globally unique on Fly.io)
-app = "rodando"
-primary_region = "gru"  # São Paulo — closest to Argentina
+app = "rondando"
+primary_region = "ams"
 
 [build]
   dockerfile = "Dockerfile"
@@ -22,14 +21,8 @@ primary_region = "gru"  # São Paulo — closest to Argentina
   cpu_kind = "shared"
   cpus = 1
 
-# Persistent volume for SQLite database
+# Single persistent volume: SQLite DB + uploads
 [[mounts]]
   source = "rodando_data"
   destination = "/app/data"
-  initial_size = "1gb"
-
-# Persistent volume for uploaded files
-[[mounts]]
-  source = "rodando_uploads"
-  destination = "/app/uploads"
-  initial_size = "2gb"
+  initial_size = "3gb"

@@ -73,7 +73,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'El archivo supera el límite de 10MB' }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), 'uploads', String(session.clientId));
+  const uploadsBase = process.env.NODE_ENV === 'production'
+    ? '/app/data/uploads'
+    : path.join(process.cwd(), 'uploads');
+
+  const uploadDir = path.join(uploadsBase, String(session.clientId));
   fs.mkdirSync(uploadDir, { recursive: true });
 
   const ext = EXTENSIONS[file.type] || 'bin';
@@ -85,7 +89,8 @@ export async function POST(request: NextRequest) {
   // Delete old file if exists
   const existing = db.prepare(`SELECT ${column} FROM clients WHERE id = ?`).get(session.clientId) as Record<string, string | null> | undefined;
   if (existing?.[column]) {
-    const oldPath = path.join(process.cwd(), existing[column] as string);
+    const oldRelative = (existing[column] as string).replace(/^uploads\//, '');
+    const oldPath = path.join(uploadsBase, oldRelative);
     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
   }
 
@@ -93,7 +98,7 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await file.arrayBuffer();
   fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
 
-  const relativePath = path.relative(process.cwd(), filePath);
+  const relativePath = `uploads/${session.clientId}/${filename}`;
   db.prepare(`UPDATE clients SET ${column} = ? WHERE id = ?`).run(relativePath, session.clientId);
 
   // Recalculate status

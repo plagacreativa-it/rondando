@@ -15,11 +15,14 @@ export async function GET(
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const filePath = path.join(process.cwd(), 'uploads', ...params.path);
+  const uploadsBase = process.env.NODE_ENV === 'production'
+    ? '/app/data/uploads'
+    : path.join(process.cwd(), 'uploads');
+
+  const filePath = path.join(uploadsBase, ...params.path);
 
   // Prevent path traversal
-  const uploadsDir = path.join(process.cwd(), 'uploads');
-  if (!filePath.startsWith(uploadsDir)) {
+  if (!filePath.startsWith(uploadsBase)) {
     return NextResponse.json({ error: 'Ruta inválida' }, { status: 400 });
   }
 
